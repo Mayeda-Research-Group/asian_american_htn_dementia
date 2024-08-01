@@ -1,3 +1,7 @@
+# Purpose : Using cumulative incidence to calculate RR and RD
+# Created by: Juliet Zhou
+# Creation date: 7/16/2024
+
 # ----setup and loading packages----
 if (!require("pacman"))
   install.packages("pacman", repos = 'http://cran.us.r-project.org')
