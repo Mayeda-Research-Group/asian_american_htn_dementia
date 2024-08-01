@@ -1,6 +1,5 @@
 # Cleaning Rx data and merging it into the pre-mi dataset for table 1 complete case
-# Created by: Natalie Gradwohl
-# Adpated from Juliet Zhou's code for Asian Americans ADRD Diabetes project
+# Created by: Natalie Gradwohl, Yingyan Wu
 # Creation date: 2/12/2024
 
 if (!require("pacman"))
