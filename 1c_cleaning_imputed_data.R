@@ -1,4 +1,4 @@
-# Multiple imputation of wide dataset
+# Cleaning imputed dataset
 # Created by: Natalie Gradwohl
 # Adpated from Juliet Zhou's code for Asian Americans ADRD Diabetes project
 # Creation date: 2/12/2024
