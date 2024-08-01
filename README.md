@@ -1,6 +1,6 @@
 # asian_american_htn_dementia
 
-These scripts are part of an R Project that use the "here" package to input data and export results. The code works in 4 main phases: data setup, exploratory analysis, main analysis, and secondary analysis. Each phase is summarized below. 
+The code works in 4 main phases: data setup, exploratory analysis, main analysis, and secondary analysis. Each phase is summarized below. 
 
 
 Data setup
