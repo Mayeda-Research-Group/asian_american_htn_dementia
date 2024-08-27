@@ -14,26 +14,22 @@ options(scipen = 9999)
 # ----loading data----
 source(here("scripts", "0_paths.R"))
 
-aa_raw_data <-
-  read_sas(paste0(path_to_raw_data,
-                  "aa_adrd_cardiometabolic_tte.sas7bdat")) %>% clean_names()
+aa_raw_data <- read_sas(
+  paste0(path_to_raw_data, "aa_adrd_cardiometabolic_tte.sas7bdat")
+) %>% clean_names()
 
-bp_data <- read_sas(paste0(path_to_bp_data,
-                           "c10049_bp.sas7bdat")) %>%
+bp_data <- read_sas(paste0(path_to_bp_data, "c10049_bp.sas7bdat")) %>%
   clean_names()
 
 # ----cleaning wide cardiometabolic data----
 
 # n = 184,929 obs
 
-wide_data <-
-  
-  aa_raw_data %>% filter(main_dem_v1_sample == 1) %>%
-  
+wide_data <- aa_raw_data %>% 
+  filter(main_dem_v1_sample == 1) %>%
   # after filtering out prevalent dementia, n = 180,394
   
   filter(ethnicity_rev %in% c(1, 2, 3, 5, 9)) %>%
-  
   # after restricting to South Asian, Chinese, Japanese, Filipino, White, n = 159,477
   
   select(
@@ -77,6 +73,7 @@ wide_data <-
     diab_dx5yr_flag,
     diab_dx7yr_flag,
     diab_dx9yr_flag,
+    generalhealth, 
     first_prevstroke_flag,
     first_incstroke_flag,
     sr_depress,
@@ -93,41 +90,41 @@ wide_data <-
   )
 
 wide_data <- wide_data %>% 
-  
-  # deriving end age and end type
   mutate(
-    end_age = case_when(
-      main_dem_v1_end_type %in% c("ADMIN CENSORED", "END OF MEMBERSHIP") ~
-        main_dem_v1_end_age,
-      main_dem_v1_end_type %in% c("DEMENTIA", "DEATH", "CENSORED 90+") &
-        main_dem_v1_end_age > 90 ~ 90,
-      TRUE ~ main_dem_v1_end_age
-    ),
-    end_type = case_when(
-      main_dem_v1_end_type %in% c("ADMIN CENSORED", "END OF MEMBERSHIP") ~
-        str_to_title(main_dem_v1_end_type),
-      main_dem_v1_end_type %in% c("DEMENTIA", "DEATH", "CENSORED 90+") &
-        main_dem_v1_end_age > 90 ~ "Admin Censored",
-      TRUE ~ str_to_title(main_dem_v1_end_type)
-    ),
     
-    # deriving flags for end type dementia, death, and end of membership
+    # the analysis originally ended followup at age 90, but we decide to 
+    # drop this step to be in line with the diabetes paper 
+    # we can use main_dem_v1_end_age and main_dem_v1_end_type directly
     
-    event_endmem = ifelse(end_type == "End of membership", 1, 0),
-    event_death = ifelse(end_type == "Death", 1, 0),
-    event_dem = ifelse(end_type == "Dementia", 1, 0),
+    # # deriving end age and end type
+    
+    # end_age = case_when(
+    #   main_dem_v1_end_type %in% c("ADMIN CENSORED", "END OF MEMBERSHIP") ~
+    #     main_dem_v1_end_age,
+    #   main_dem_v1_end_type %in% c("DEMENTIA", "DEATH", "CENSORED 90+") &
+    #     main_dem_v1_end_age > 90 ~ 90,
+    #   TRUE ~ main_dem_v1_end_age
+    # ),
+    # end_type = case_when(
+    #   main_dem_v1_end_type %in% c("ADMIN CENSORED", "END OF MEMBERSHIP") ~
+    #     str_to_title(main_dem_v1_end_type),
+    #   main_dem_v1_end_type %in% c("DEMENTIA", "DEATH", "CENSORED 90+") &
+    #     main_dem_v1_end_age > 90 ~ "Admin Censored",
+    #   TRUE ~ str_to_title(main_dem_v1_end_type)
+    # ),
+    
+    # # deriving flags for end type dementia, death, and end of membership
+    # 
+    # event_endmem = ifelse(end_type == "End of membership", 1, 0),
+    # event_death = ifelse(end_type == "Death", 1, 0),
+    # event_dem = ifelse(end_type == "Dementia", 1, 0),
     
     # deriving 3-level education variable
-    
     edu_3 = case_when(
       education_rev %in% c(1, 2) ~ "< HS",
       education_rev %in% c(3, 4) ~ "HS + Some college",
       education_rev %in% c(5, 6) ~ "College and above"
-    ),
-    edu_3 = factor(edu_3,
-                   levels = c(
-                     "< HS", "HS + Some college", "College and above"
-                   ))
+    ) %>% factor(levels = c("< HS", "HS + Some college", "College and above"))
   )
 
 
@@ -146,7 +143,6 @@ length(unique(bp_data$subjid)) # n = 157,607
 nrow(wide_data) - length(unique(bp_data$subjid))
 
 bp_data_clean <- bp_data %>%
-  
   mutate(
     subjid = as.numeric(subjid),
     # merging categorical bp's with continuous
@@ -161,15 +157,14 @@ bp_data_clean <- bp_data %>%
     age_yr = round(age),
     flag_90plus = as.Date(measure_date) == "1600-01-01"
   ) %>%
-  
   rename(dbp = continuous_dbp, sbp = continuous_sbp) %>%
   select(-categorical_dbp, -categorical_sbp, -measure_date, -enctype) %>%
   arrange(subjid, age)
 
 
 # ----creating baseline age dataset----
-age_data <-
-  wide_data %>% mutate(survey_age_r = round(survey_age)) %>%
+age_data <- wide_data %>%
+  mutate(survey_age_r = round(survey_age)) %>%
   select(subjid, survey_age_r)
 
 # ----calculating median bp for each year----
@@ -194,6 +189,7 @@ bp_med_vars <- bp_median %>%
   select(subjid, survey_age_sbp_diff, sbp_closest_to_baseline)
 
 wide_data_pre_mi <- left_join(wide_data, bp_med_vars, by = "subjid")
+
 # ----saving pre-mi dataset----
 saveRDS(wide_data_pre_mi,
-        file = paste0(path_to_analytic_data, "wide_data_pre_mi.rds")) # 43 variables
+        file = paste0(path_to_analytic_data, "wide_data_pre_mi.rds")) # 44-5 = 39 variables

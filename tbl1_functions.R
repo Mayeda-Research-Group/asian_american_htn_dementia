@@ -21,9 +21,9 @@ tbl1_label <- function (data) {
       
       ethnicity_rev = factor(
         ethnicity_rev,
-        levels = c(2, 3, 5, 1, 9),
-        labels = c("Chinese", "Japanese",
-                   "Filipino", "South Asian", "White")
+        levels = c(2, 5, 3, 1, 9),
+        labels = c("Chinese", "Filipino", "Japanese",
+                   "South Asian", "White")
         
       ),
       
@@ -33,11 +33,23 @@ tbl1_label <- function (data) {
         labels = c("Born in the US", "Foreign born")
       ),
       
-      maritalstatus = as.factor(case_when(
+      edu_3 = case_when(
+        education_rev %in% c(1, 2) ~ "< HS",
+        education_rev %in% c(3, 4) ~ "HS degree or some college",
+        education_rev %in% c(5, 6) ~ "College degree"
+      ) %>% factor(levels = c("< HS", "HS degree or some college", "College degree")),
+      
+      maritalstatus = case_when(
         maritalstatus %in% c(1, 3, 4) ~ "Not married",
         maritalstatus == 2 ~ "Married",
         TRUE ~ NA_character_
-      )),
+      ) %>% factor(levels = c("Married", "Not married")),
+      
+      generalhealth_3 = case_when(
+        generalhealth %in% c(1,2) ~ "Excellent or very good", 
+        generalhealth %in% c(3) ~ "Good",
+        generalhealth %in% c(4,5) ~ "Fair or poor"
+      ) %>% factor(levels = c("Excellent or very good", "Good", "Fair or poor")),
       
       diab_dx5yr_flag = factor(
         diab_dx5yr_flag,
@@ -93,16 +105,23 @@ tbl1_label <- function (data) {
         labels = c(
           "Dementia",
           "Death",
-          "Administratively Censored",
-          "End of Membership",
+          "Administratively censored",
+          "End of membership",
           "Censored 90+"
         )
       ),
+      
       smoking_status = factor(
         smoking_status,
         levels = 1:3,
         labels = c("Never", "Former", "Current")
       ),
+      
+      eversmoke = case_when(
+        smoking_status == 1 ~ "No", 
+        smoking_status %in% c(2, 3) ~ "Yes"
+      ) %>% factor(levels = c("Yes", "No")),
+  
       sr_depress = factor(
         sr_depress,
         levels = c(1, 0),
@@ -132,10 +151,11 @@ tbl1_label <- function (data) {
     female = "Female, n (%)",
     education_rev = "Education attainment, n (%)",
     edu_ge_college = "College degree or more, n (%)",
-    edu_3 = "Education attainment: 3 categories, n (%)",
-    usaborn_rev = "US born, n (%)",
+    edu_3 = "Education attainment, n (%)",
+    usaborn_rev = "US-born, n (%)",
     maritalstatus = "Marital status, n (%)",
     income_pp = "Household-adjusted income, dollars [mean (SD)]",
+    generalhealth_3 = "General health, n (%)", 
     main_dem_v1_end_type = "End of follow up event, n (%)",
     main_dem_v1_fu_time = "Follow up time, years [mean (SD)]",
     diab_dx5yr_flag = "Diabetes exposure 5+ years pre-survey",
@@ -147,6 +167,7 @@ tbl1_label <- function (data) {
     first_prevstroke_flag = "History of stroke, n (%)",
     ehr_ht_median = "EHR height, in [mean (SD)]",
     smoking_status = "Smoking status, n (%)",
+    eversmoke = "Ever smoked, n (%)", 
     sbp_closest_to_baseline = "SBP in the year closest to baseline [mean (SD)]",
     sr_bmi = "BMI [mean (SD)]",
     sr_depress = "Self-rated depression, n (%)",

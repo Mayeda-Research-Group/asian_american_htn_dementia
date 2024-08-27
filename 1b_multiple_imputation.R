@@ -13,8 +13,7 @@ options(scipen = 9999)
 # loading data
 source(here("scripts", "0_paths.R"))
 
-pre_mi <-
-  readRDS(paste0(path_to_analytic_data, "wide_data_pre_mi.rds"))
+pre_mi <- readRDS(paste0(path_to_analytic_data, "wide_data_pre_mi.rds"))
 
 # checking missingness----------------------------------------------------------
 
@@ -30,6 +29,7 @@ vars_to_impute  <- c(
   "income",
   "income_pp",
   "maritalstatus",
+  "generalhealth", 
   "smoking_status",
   "sr_total_height_in",
   "ehr_ht_median",
@@ -37,9 +37,7 @@ vars_to_impute  <- c(
 )
 
 
-missing_summary <-
-  data.frame(varname = vars_to_impute, pctmiss = NA)
-
+missing_summary <- data.frame(varname = vars_to_impute, pctmiss = NA)
 row.names(missing_summary) <- vars_to_impute
 
 for (i in vars_to_impute) {
@@ -52,7 +50,7 @@ for (i in vars_to_impute) {
 missing_ordered <- missing_summary[order(missing_summary$pctmiss),]
 missing_ordered
 
-ordered_var_list <- c(paste(missing_ordered$varname))
+ordered_var_list <- missing_ordered$varname
 
 # ordering variables based on least to most missingness
 aa_impute <- pre_mi[, ordered_var_list]
@@ -68,10 +66,13 @@ factor_cols <- c(
   "ethnicity_rev"
 )
 
-ordinal_cols <- c("sizeofhh",
-                  "education_rev",
-                  "income",
-                  "smoking_status")
+ordinal_cols <- c(
+  "sizeofhh",
+  "education_rev",
+  "income",
+  "smoking_status",
+  "generalhealth"
+)
 
 aa_impute <- aa_impute %>%
   mutate_at(factor_cols, as.factor) %>%
@@ -112,5 +113,4 @@ imputed = mice(
 
 
 # saving imputed datasets object
-save(imputed,
-     file = paste0(path_to_analytic_data, "imputed_raw.RData"))
+save(imputed, file = paste0(path_to_analytic_data, "imputed_raw.RData"))

@@ -14,30 +14,23 @@ multiple_models <- function(data, predictors, ethnicity, response) {
   sep_models <- vector(mode = "list", length = m)
   
   for (i in 1:m) {
-    data_i <- data[[i]]
-    
     sep_models[[i]] <-
       coxph(
         as.formula(paste(response, "~", predictors)),
         subset = (ethnicity_rev == ethnicity),
-        data = data_i
+        data = data[[i]]
       )
   }
   
-  coefs <- lapply(sep_models, function(x) {
-    x$coefficient
-  })
-  vcov <- lapply(sep_models, function(x) {
-    vcov(x)
-  })
+  coefs <- lapply(sep_models, function(x) {x$coefficient})
+  vcov <- lapply(sep_models, function(x) {vcov(x)})
   
   coef_summary <- MIcombine(coefs, vcov)
   
   #age calculation
   
   # pool the models to get a combined summary
-  linear_summary <-
-    pool(sep_models) %>% broom::tidy(conf.int = TRUE, exp = TRUE)
+  linear_summary <- pool(sep_models) %>% tidy(conf.int = TRUE, exp = TRUE)
   
   hr_summary <- linear_summary %>%
     mutate_if(is.numeric, round, 2) %>%
@@ -48,8 +41,8 @@ multiple_models <- function(data, predictors, ethnicity, response) {
     select(term, estimate_table, ethnicity)
   
   
-  output_list <-
-    list(coef_summary = coef_summary, hr_summary = hr_summary)
+  output_list <- list(coef_summary = coef_summary, hr_summary = hr_summary)
+  
   return(output_list)
   
 }
@@ -58,7 +51,13 @@ multiple_models <- function(data, predictors, ethnicity, response) {
 # using coefficients and variance-covariance matrix from fully-adjusted model
 age_hr <- function(age, coef, vcov) {
   # age <- 80
-  c <- c(1, 0, 0, 0, 0, 0, age-75) # subtracting 75 from age because htn*age coefficient is centered at age 75
+  # coef <- coef_summary$coefficients
+  # vcov <- coef_summary$variance
+  
+  # detect location of the main effect and the interaction term 
+  c <- str_detect(names(coef), "htn_dx5yr_flag") 
+  c[c] <- c(1, age - 75) # subtracting 75 from age because htn*age coefficient is centered at age 75
+
   pe <- coef %*% c # log HR
   
   var <- t(c) %*% vcov %*% c

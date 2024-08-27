@@ -51,7 +51,7 @@ calculate_pys <- function(data, age_cat, fu_start, fu_end, event_flag) {
           get(fu_start) <= cat_end & get(fu_end) <= cat_end ~ 
             get(fu_end) - get(fu_start), 
           
-          # start of fu during age category and end of fu after age cateogory:
+          # start of fu during age category and end of fu after age category:
           get(fu_start) <= cat_end & get(fu_end) > cat_end ~ 
             cat_end - get(fu_start), 
           
